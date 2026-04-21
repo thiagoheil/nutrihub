@@ -5,9 +5,9 @@ import { mockStore } from "@/mocks/store";
 const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 
 export const dietService = {
-  getActivePlan: async (): Promise<DietPlan> => {
+  getActivePlan: async (): Promise<DietPlan | null> => {
     await delay();
-    return SEED_DIET_PLAN;
+    return mockStore.getActivePlan();
   },
 
   getPlanById: async (_id: string): Promise<DietPlan> => {
@@ -15,9 +15,17 @@ export const dietService = {
     return SEED_DIET_PLAN;
   },
 
-  generatePlan: async (_payload: { goalDescription: string }): Promise<DietPlan> => {
+  generatePlan: async (payload: {
+    goalDescription: string;
+    selectedFoods?: Record<string, string[]>;
+  }): Promise<DietPlan> => {
     await delay(1200);
-    return SEED_DIET_PLAN;
+    if (payload.selectedFoods) {
+      mockStore.setPendingFoodSelections(payload.selectedFoods);
+    }
+    const plan = SEED_DIET_PLAN;
+    mockStore.setActivePlan(plan);
+    return plan;
   },
 
   getPreferences: async (): Promise<UserFoodPreference[]> => {

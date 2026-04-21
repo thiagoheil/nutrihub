@@ -1,10 +1,11 @@
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/auth.store";
 import { useActiveDietPlan, useTodayLogs } from "@/hooks/use-diet";
 import { useLatestMetric } from "@/hooks/use-metrics";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { router } from "expo-router";
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
@@ -52,18 +53,26 @@ export default function HomeScreen() {
         {metric && (
           <View style={{ flexDirection: "row", gap: 12, marginBottom: 16 }}>
             {metric.weightKg && (
-              <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}
+                onPress={() => router.push("/(app)/setup-profile")}
+                activeOpacity={0.7}
+              >
                 <Text style={{ fontSize: 12, fontFamily: "Inter-Regular", color: "#9CA3AF" }}>Peso</Text>
                 <Text style={{ fontSize: 22, fontFamily: "Inter-Bold", color: "#111827" }}>{metric.weightKg}</Text>
                 <Text style={{ fontSize: 12, fontFamily: "Inter-Regular", color: "#9CA3AF" }}>kg</Text>
-              </View>
+              </TouchableOpacity>
             )}
             {metric.bmi && (
-              <View style={{ flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: "#fff", borderRadius: 14, padding: 16, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}
+                onPress={() => router.push("/(app)/setup-profile")}
+                activeOpacity={0.7}
+              >
                 <Text style={{ fontSize: 12, fontFamily: "Inter-Regular", color: "#9CA3AF" }}>IMC</Text>
                 <Text style={{ fontSize: 22, fontFamily: "Inter-Bold", color: "#111827" }}>{metric.bmi.toFixed(1)}</Text>
                 <Text style={{ fontSize: 12, fontFamily: "Inter-Regular", color: "#9CA3AF" }}>kg/m²</Text>
-              </View>
+              </TouchableOpacity>
             )}
           </View>
         )}

@@ -54,7 +54,8 @@ export function useLogMeal() {
 export function useGenerateDietPlan() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (goalDescription: string) => dietService.generatePlan({ goalDescription }),
+    mutationFn: (payload: { goalDescription: string; selectedFoods?: Record<string, string[]> }) =>
+      dietService.generatePlan(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: dietKeys.activePlan() });
     },

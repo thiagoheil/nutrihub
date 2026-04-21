@@ -1,4 +1,4 @@
-import type { Metric, MealLog, ConnectionRequest } from "@/types";
+import type { Metric, MealLog, ConnectionRequest, DietPlan } from "@/types";
 import {
   SEED_USERS,
   SEED_METRICS,
@@ -13,6 +13,8 @@ let metricsPerUser = new Map<string, Metric[]>([["u1", [...SEED_METRICS]]]);
 let todayLogs: MealLog[] = [...SEED_TODAY_LOGS];
 let connections: ConnectionRequest[] = [...SEED_PENDING_REQUESTS];
 let userIdCounter = 100;
+let activeDietPlan: DietPlan | null = null;
+let pendingFoodSelections: Record<string, string[]> | null = null;
 
 export const mockStore = {
   getUserById(id: string): MockUser | undefined {
@@ -72,5 +74,19 @@ export const mockStore = {
   },
   cancelRequest(requestId: string): void {
     connections = connections.filter((c) => c.id !== requestId);
+  },
+
+  getActivePlan(): DietPlan | null {
+    return activeDietPlan;
+  },
+  setActivePlan(plan: DietPlan): void {
+    activeDietPlan = plan;
+  },
+
+  getPendingFoodSelections(): Record<string, string[]> | null {
+    return pendingFoodSelections;
+  },
+  setPendingFoodSelections(selections: Record<string, string[]>): void {
+    pendingFoodSelections = selections;
   },
 };

@@ -9,6 +9,8 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="(nutritionist)" />
+      <Stack.Screen name="setup-profile" />
+      <Stack.Screen name="build-diet" />
     </Stack>
   );
 }
