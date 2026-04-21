@@ -77,7 +77,10 @@ export function useUserLocation() {
     queryKey: ["location"],
     queryFn: async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") throw new Error("Permissão de localização negada");
+      if (status !== "granted") {
+        // fallback para São Paulo quando permissão negada (modo mock/dev)
+        return { latitude: -23.5505, longitude: -46.6333 };
+      }
       const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       return { latitude: loc.coords.latitude, longitude: loc.coords.longitude };
     },

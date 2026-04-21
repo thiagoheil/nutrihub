@@ -1,5 +1,12 @@
-import { api } from "@/lib/api";
-import { NutritionistProfile, ConnectionRequest } from "@/types";
+import type { NutritionistProfile, ConnectionRequest } from "@/types";
+import { SEED_NUTRITIONIST_PROFILES, SEED_PATIENTS } from "@/mocks/data";
+import { mockStore } from "@/mocks/store";
+import { storage } from "@/lib/storage";
+
+const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
+
+const currentUserId = () =>
+  storage.getTokens()?.accessToken?.replace("mock_token_", "") ?? "u1";
 
 interface NearbyParams {
   latitude: number;
@@ -9,30 +16,57 @@ interface NearbyParams {
 }
 
 export const nutritionistService = {
-  // Discovery
-  findNearby: (params: NearbyParams) =>
-    api.get<NutritionistProfile[]>("/nutritionists/nearby", { params }).then((r) => r.data),
+  findNearby: async (_params: NearbyParams): Promise<NutritionistProfile[]> => {
+    await delay();
+    return SEED_NUTRITIONIST_PROFILES;
+  },
 
-  getById: (id: string) =>
-    api.get<NutritionistProfile>(`/nutritionists/${id}`).then((r) => r.data),
+  getById: async (id: string): Promise<NutritionistProfile> => {
+    await delay();
+    const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.id === id);
+    if (!profile) throw new Error("Nutricionista não encontrado");
+    return profile;
+  },
 
-  // Connection flow
-  sendRequest: (nutritionistId: string, message?: string) =>
-    api.post<ConnectionRequest>("/connections", { nutritionistId, message }).then((r) => r.data),
+  sendRequest: async (nutritionistId: string, message?: string): Promise<ConnectionRequest> => {
+    await delay();
+    const conn: ConnectionRequest = {
+      id: `cr_${Date.now()}`,
+      userId: currentUserId(),
+      nutritionistId,
+      status: "pending",
+      message,
+      requestedAt: new Date().toISOString(),
+    };
+    mockStore.addConnection(conn);
+    return conn;
+  },
 
-  getMyRequest: () =>
-    api.get<ConnectionRequest | null>("/connections/mine").then((r) => r.data),
+  getMyRequest: async (): Promise<ConnectionRequest | null> => {
+    await delay();
+    return mockStore.getMyRequest(currentUserId());
+  },
 
-  cancelRequest: (requestId: string) =>
-    api.delete(`/connections/${requestId}`).then((r) => r.data),
+  cancelRequest: async (requestId: string) => {
+    await delay();
+    mockStore.cancelRequest(requestId);
+    return {};
+  },
 
-  // Nutritionist side
-  getPendingRequests: () =>
-    api.get<ConnectionRequest[]>("/connections/pending").then((r) => r.data),
+  getPendingRequests: async (): Promise<ConnectionRequest[]> => {
+    await delay();
+    // np1 é o perfil do nutricionista u2 (ana@test.com)
+    return mockStore.getPendingRequests("np1");
+  },
 
-  respondToRequest: (requestId: string, accept: boolean) =>
-    api.patch(`/connections/${requestId}`, { accept }).then((r) => r.data),
+  respondToRequest: async (requestId: string, accept: boolean) => {
+    await delay();
+    mockStore.respondToRequest(requestId, accept);
+    return {};
+  },
 
-  getMyPatients: () =>
-    api.get<NutritionistProfile[]>("/nutritionists/patients").then((r) => r.data),
+  getMyPatients: async (): Promise<NutritionistProfile[]> => {
+    await delay();
+    return SEED_PATIENTS;
+  },
 };

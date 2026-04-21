@@ -8,7 +8,7 @@
     "scheme": "nutriapp",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#16A34A"
     },
@@ -25,7 +25,10 @@
         "backgroundColor": "#16A34A"
       },
       "package": "com.yourcompany.nutriapp",
-      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"]
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -35,7 +38,9 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Permite encontrar nutricionistas próximos."
         }
-      ]
+      ],
+      "expo-asset",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

@@ -1,32 +1,62 @@
-import { api } from "@/lib/api";
-import { DietPlan, MealLog, Food, UserFoodPreference, FoodPreference } from "@/types";
+import type { DietPlan, MealLog, Food, UserFoodPreference, FoodPreference } from "@/types";
+import { SEED_DIET_PLAN } from "@/mocks/data";
+import { mockStore } from "@/mocks/store";
+
+const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 
 export const dietService = {
-  // Diet Plans
-  getActivePlan: () =>
-    api.get<DietPlan>("/diet-plans/active").then((r) => r.data),
+  getActivePlan: async (): Promise<DietPlan> => {
+    await delay();
+    return SEED_DIET_PLAN;
+  },
 
-  getPlanById: (id: string) =>
-    api.get<DietPlan>(`/diet-plans/${id}`).then((r) => r.data),
+  getPlanById: async (_id: string): Promise<DietPlan> => {
+    await delay();
+    return SEED_DIET_PLAN;
+  },
 
-  generatePlan: (payload: { goalDescription: string }) =>
-    api.post<DietPlan>("/diet-plans/generate", payload).then((r) => r.data),
+  generatePlan: async (_payload: { goalDescription: string }): Promise<DietPlan> => {
+    await delay(1200);
+    return SEED_DIET_PLAN;
+  },
 
-  // Food preferences (for algorithm)
-  getPreferences: () =>
-    api.get<UserFoodPreference[]>("/food-preferences").then((r) => r.data),
+  getPreferences: async (): Promise<UserFoodPreference[]> => {
+    await delay();
+    return [];
+  },
 
-  upsertPreference: (foodId: string, preference: FoodPreference) =>
-    api.put(`/food-preferences/${foodId}`, { preference }).then((r) => r.data),
+  upsertPreference: async (_foodId: string, _preference: FoodPreference) => {
+    await delay();
+    return {};
+  },
 
-  // Foods
-  searchFoods: (query: string) =>
-    api.get<Food[]>("/foods/search", { params: { q: query } }).then((r) => r.data),
+  searchFoods: async (query: string): Promise<Food[]> => {
+    await delay(300);
+    const allFoods = SEED_DIET_PLAN.meals.flatMap((m) => m.items.map((i) => i.food));
+    const q = query.toLowerCase();
+    return allFoods.filter((f) => f.name.toLowerCase().includes(q));
+  },
 
-  // Meal logs
-  logMeal: (payload: { mealId: string; status: MealLog["status"]; notes?: string }) =>
-    api.post<MealLog>("/meal-logs", payload).then((r) => r.data),
+  logMeal: async (payload: {
+    mealId: string;
+    status: MealLog["status"];
+    notes?: string;
+  }): Promise<MealLog> => {
+    await delay();
+    const log: MealLog = {
+      id: `log_${Date.now()}`,
+      mealId: payload.mealId,
+      loggedAt: new Date().toISOString(),
+      status: payload.status,
+      adherencePct: payload.status === "eaten" ? 100 : payload.status === "partial" ? 70 : 0,
+      notes: payload.notes,
+    };
+    mockStore.addLog(log);
+    return log;
+  },
 
-  getTodayLogs: () =>
-    api.get<MealLog[]>("/meal-logs/today").then((r) => r.data),
+  getTodayLogs: async (): Promise<MealLog[]> => {
+    await delay();
+    return mockStore.getTodayLogs();
+  },
 };
