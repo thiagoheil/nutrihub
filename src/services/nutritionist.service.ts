@@ -1,5 +1,5 @@
-import type { NutritionistProfile, ConnectionRequest } from "@/types";
-import { SEED_NUTRITIONIST_PROFILES, SEED_PATIENTS } from "@/mocks/data";
+import type { NutritionistProfile, ConnectionRequest, InviteToken, ServiceType, Recipe, PatientSummary, Metric } from "@/types";
+import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
 import { mockStore } from "@/mocks/store";
 import { storage } from "@/lib/storage";
 
@@ -8,6 +8,11 @@ const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
 const currentUserId = () =>
   storage.getTokens()?.accessToken?.replace("mock_token_", "") ?? "u1";
 
+const currentNutritionistId = () => {
+  const uid = currentUserId();
+  return SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === uid)?.id ?? "np1";
+};
+
 interface NearbyParams {
   latitude: number;
   longitude: number;
@@ -15,7 +20,14 @@ interface NearbyParams {
   specialties?: string[];
 }
 
+function generateTokenCode(prefix: string): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const rand = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return `${prefix.toUpperCase().slice(0, 3)}-${rand}`;
+}
+
 export const nutritionistService = {
+  // ─── Discovery ────────────────────────────────────────────────────────────────
   findNearby: async (_params: NearbyParams): Promise<NutritionistProfile[]> => {
     await delay();
     return SEED_NUTRITIONIST_PROFILES;
@@ -28,6 +40,48 @@ export const nutritionistService = {
     return profile;
   },
 
+  // ─── Code / token lookup ──────────────────────────────────────────────────────
+  findByCode: async (code: string): Promise<NutritionistProfile | null> => {
+    await delay(300);
+    const normalized = code.trim().toUpperCase();
+    const token = mockStore.findTokenByCode(normalized);
+    if (token) {
+      return SEED_NUTRITIONIST_PROFILES.find((n) => n.id === token.nutritionistId) ?? null;
+    }
+    return SEED_NUTRITIONIST_PROFILES.find((n) => n.inviteCode?.toUpperCase() === normalized) ?? null;
+  },
+
+  findTokenByCode: async (code: string): Promise<InviteToken | null> => {
+    await delay(300);
+    return mockStore.findTokenByCode(code.trim().toUpperCase());
+  },
+
+  connectByCode: async (nutritionistId: string, code: string): Promise<ConnectionRequest> => {
+    await delay();
+    const uid = currentUserId();
+    const token = mockStore.findTokenByCode(code.trim().toUpperCase());
+    const conn: ConnectionRequest = {
+      id: `cr_${Date.now()}`,
+      userId: uid,
+      nutritionistId,
+      status: "accepted",
+      message: `Conectado via código: ${code.toUpperCase()}`,
+      requestedAt: new Date().toISOString(),
+      respondedAt: new Date().toISOString(),
+      connectedVia: "code",
+      inviteTokenId: token?.id,
+      serviceType: token?.serviceType,
+      priceRcents: token?.priceRcents,
+    };
+    if (token) {
+      const user = mockStore.getUserById(uid);
+      mockStore.useToken(token.id, uid, user?.name ?? "Usuário");
+    }
+    mockStore.addConnection(conn);
+    return conn;
+  },
+
+  // ─── Requests ─────────────────────────────────────────────────────────────────
   sendRequest: async (nutritionistId: string, message?: string): Promise<ConnectionRequest> => {
     await delay();
     const conn: ConnectionRequest = {
@@ -55,8 +109,7 @@ export const nutritionistService = {
 
   getPendingRequests: async (): Promise<ConnectionRequest[]> => {
     await delay();
-    // np1 é o perfil do nutricionista u2 (ana@test.com)
-    return mockStore.getPendingRequests("np1");
+    return mockStore.getPendingRequests(currentNutritionistId());
   },
 
   respondToRequest: async (requestId: string, accept: boolean) => {
@@ -65,8 +118,80 @@ export const nutritionistService = {
     return {};
   },
 
-  getMyPatients: async (): Promise<NutritionistProfile[]> => {
+  // ─── Patients ─────────────────────────────────────────────────────────────────
+  getMyPatients: async (): Promise<PatientSummary[]> => {
     await delay();
-    return SEED_PATIENTS;
+    return mockStore.getMyPatients();
+  },
+
+  getPatientById: async (id: string): Promise<PatientSummary> => {
+    await delay();
+    const patient = mockStore.getPatientById(id);
+    if (!patient) throw new Error("Paciente não encontrado");
+    return patient;
+  },
+
+  getPatientMetrics: async (userId: string): Promise<Metric[]> => {
+    await delay(300);
+    return mockStore.getMetrics(userId);
+  },
+
+  // ─── Invite tokens ────────────────────────────────────────────────────────────
+  getMyTokens: async (): Promise<InviteToken[]> => {
+    await delay();
+    return mockStore.getTokensByNutritionist(currentNutritionistId());
+  },
+
+  createToken: async (params: {
+    label: string;
+    serviceType: ServiceType;
+    priceRcents: number;
+    notes?: string;
+    expiresAt?: string;
+  }): Promise<InviteToken> => {
+    await delay();
+    const nutId = currentNutritionistId();
+    const nut = SEED_NUTRITIONIST_PROFILES.find((n) => n.id === nutId);
+    const prefix = nut?.user.name.split(" ").at(-1)?.slice(0, 3) ?? "NUT";
+    const token: InviteToken = {
+      id: `tok_${Date.now()}`,
+      code: generateTokenCode(prefix),
+      nutritionistId: nutId,
+      status: "active",
+      createdAt: new Date().toISOString(),
+      ...params,
+    };
+    mockStore.addToken(token);
+    return token;
+  },
+
+  revokeToken: async (tokenId: string) => {
+    await delay();
+    mockStore.revokeToken(tokenId);
+    return {};
+  },
+
+  // ─── Recipes ──────────────────────────────────────────────────────────────────
+  getMyRecipes: async (): Promise<Recipe[]> => {
+    await delay();
+    return mockStore.getRecipesByNutritionist(currentNutritionistId());
+  },
+
+  createRecipe: async (params: Omit<Recipe, "id" | "nutritionistId" | "createdAt">): Promise<Recipe> => {
+    await delay();
+    const recipe: Recipe = {
+      id: `rec_${Date.now()}`,
+      nutritionistId: currentNutritionistId(),
+      createdAt: new Date().toISOString(),
+      ...params,
+    };
+    mockStore.addRecipe(recipe);
+    return recipe;
+  },
+
+  deleteRecipe: async (recipeId: string) => {
+    await delay();
+    mockStore.deleteRecipe(recipeId);
+    return {};
   },
 };

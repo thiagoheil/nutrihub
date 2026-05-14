@@ -51,6 +51,46 @@ export function useLogMeal() {
   });
 }
 
+export function useLogsForDate(date: string) {
+  return useQuery({
+    queryKey: ["diet", "logs", date],
+    queryFn: () => dietService.getLogsForDate(date),
+  });
+}
+
+export function useDiaryDates() {
+  return useQuery({
+    queryKey: ["diet", "diary-dates"],
+    queryFn: dietService.getDiaryDates,
+  });
+}
+
+export function useLogMealForDate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ date, ...payload }: { date: string; mealId: string; status: MealLog["status"] }) =>
+      dietService.logMealForDate(date, payload),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["diet", "logs", vars.date] });
+      qc.invalidateQueries({ queryKey: ["diet", "diary-dates"] });
+      qc.invalidateQueries({ queryKey: dietKeys.todayLogs() });
+    },
+  });
+}
+
+export function useRemoveLogForDate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ date, logId }: { date: string; logId: string }) =>
+      dietService.removeLogForDate(date, logId),
+    onSuccess: (_data, vars) => {
+      qc.invalidateQueries({ queryKey: ["diet", "logs", vars.date] });
+      qc.invalidateQueries({ queryKey: ["diet", "diary-dates"] });
+      qc.invalidateQueries({ queryKey: dietKeys.todayLogs() });
+    },
+  });
+}
+
 export function useGenerateDietPlan() {
   const qc = useQueryClient();
   return useMutation({

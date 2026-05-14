@@ -11,6 +11,13 @@ export interface Metric {
   waistCm?: number;
   bmi?: number;
   goal?: HealthGoal;
+  armCm?: number;
+  abdomenCm?: number;
+  hipCm?: number;
+  thighCm?: number;
+  calfCm?: number;
+  observation?: string;
+  photos?: string[];
 }
 
 export interface MetricPayload {
@@ -21,4 +28,11 @@ export interface MetricPayload {
   muscleMassKg?: number;
   waistCm?: number;
   goal?: HealthGoal;
+  armCm?: number;
+  abdomenCm?: number;
+  hipCm?: number;
+  thighCm?: number;
+  calfCm?: number;
+  observation?: string;
+  photos?: string[];
 }

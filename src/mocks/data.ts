@@ -1,4 +1,4 @@
-import type { User, DietPlan, Metric, NutritionistProfile, ConnectionRequest, MealLog, Recipe } from "@/types";
+import type { User, DietPlan, Metric, NutritionistProfile, ConnectionRequest, MealLog, Recipe, InviteToken, PatientSummary } from "@/types";
 
 export type MockUser = User & { password: string };
 
@@ -138,11 +138,13 @@ export const SEED_DIET_PLAN: DietPlan = {
 };
 
 export const SEED_METRICS: Metric[] = [
-  { id: "met1", userId: "u1", measuredAt: "2024-02-01T08:00:00Z", weightKg: 85, heightCm: 175, bodyFatPct: 24, muscleMassKg: 60, waistCm: 92, bmi: 27.8, goal: "lose_weight" },
-  { id: "met2", userId: "u1", measuredAt: "2024-02-15T08:00:00Z", weightKg: 84, heightCm: 175, bodyFatPct: 23.5, muscleMassKg: 60.5, waistCm: 91, bmi: 27.4, goal: "lose_weight" },
-  { id: "met3", userId: "u1", measuredAt: "2024-03-01T08:00:00Z", weightKg: 83.2, heightCm: 175, bodyFatPct: 23, muscleMassKg: 61, waistCm: 90, bmi: 27.2, goal: "lose_weight" },
-  { id: "met4", userId: "u1", measuredAt: "2024-03-15T08:00:00Z", weightKg: 82.5, heightCm: 175, bodyFatPct: 22.5, muscleMassKg: 61.5, waistCm: 89, bmi: 26.9, goal: "lose_weight" },
-  { id: "met5", userId: "u1", measuredAt: "2024-04-01T08:00:00Z", weightKg: 81.8, heightCm: 175, bodyFatPct: 22, muscleMassKg: 62, waistCm: 88, bmi: 26.7, goal: "lose_weight" },
+  { id: "met1", userId: "u1", measuredAt: "2026-01-15T08:00:00Z", weightKg: 85, heightCm: 175, bodyFatPct: 24, muscleMassKg: 60, waistCm: 92, bmi: 27.8, goal: "lose_weight", armCm: 34, abdomenCm: 95, hipCm: 102, thighCm: 58, calfCm: 37, observation: "Início do programa" },
+  { id: "met2", userId: "u1", measuredAt: "2026-02-01T08:00:00Z", weightKg: 83.5, heightCm: 175, bodyFatPct: 23.2, muscleMassKg: 60.8, waistCm: 90, bmi: 27.3, goal: "lose_weight", armCm: 33.5, abdomenCm: 93, hipCm: 100, thighCm: 57, calfCm: 36.5 },
+  { id: "met3", userId: "u1", measuredAt: "2026-02-15T08:00:00Z", weightKg: 82.1, heightCm: 175, bodyFatPct: 22.5, muscleMassKg: 61.2, waistCm: 88, bmi: 26.8, goal: "lose_weight", armCm: 33, abdomenCm: 91, hipCm: 98, thighCm: 56, calfCm: 36 },
+  { id: "met4", userId: "u1", measuredAt: "2026-03-01T08:00:00Z", weightKg: 80.8, heightCm: 175, bodyFatPct: 21.8, muscleMassKg: 61.8, waistCm: 86, bmi: 26.4, goal: "lose_weight", armCm: 32.5, abdomenCm: 89, hipCm: 97, thighCm: 55.5, calfCm: 35.5, observation: "Após treino de força" },
+  { id: "met5", userId: "u1", measuredAt: "2026-03-20T08:00:00Z", weightKg: 79.5, heightCm: 175, bodyFatPct: 21, muscleMassKg: 62.3, waistCm: 85, bmi: 26, goal: "lose_weight", armCm: 32, abdomenCm: 87, hipCm: 95, thighCm: 55, calfCm: 35 },
+  { id: "met6", userId: "u1", measuredAt: "2026-04-10T08:00:00Z", weightKg: 78.2, heightCm: 175, bodyFatPct: 20.3, muscleMassKg: 62.8, waistCm: 83, bmi: 25.5, goal: "lose_weight", armCm: 31.5, abdomenCm: 85, hipCm: 93, thighCm: 54, calfCm: 34.5 },
+  { id: "met7", userId: "u1", measuredAt: "2026-05-01T08:00:00Z", weightKg: 77, heightCm: 175, bodyFatPct: 19.5, muscleMassKg: 63.5, waistCm: 81, bmi: 25.1, goal: "lose_weight", armCm: 31, abdomenCm: 83, hipCm: 92, thighCm: 53, calfCm: 34, observation: "Melhor registro até agora" },
 ];
 
 export const SEED_TODAY_LOGS: MealLog[] = [
@@ -165,6 +167,7 @@ export const SEED_NUTRITIONIST_PROFILES: NutritionistProfile[] = [
     ratingCount: 127,
     user: { id: "u2", name: "Dra. Ana Lima" },
     distanceKm: 0.8,
+    inviteCode: "ANA001",
   },
   {
     id: "np2",
@@ -180,6 +183,7 @@ export const SEED_NUTRITIONIST_PROFILES: NutritionistProfile[] = [
     ratingCount: 89,
     user: { id: "u3", name: "Dra. Carla Mendes" },
     distanceKm: 1.4,
+    inviteCode: "CAR002",
   },
   {
     id: "np3",
@@ -195,6 +199,7 @@ export const SEED_NUTRITIONIST_PROFILES: NutritionistProfile[] = [
     ratingCount: 43,
     user: { id: "u4", name: "Dr. Bruno Costa" },
     distanceKm: 2.1,
+    inviteCode: "BRU003",
   },
 ];
 
@@ -217,26 +222,134 @@ export const SEED_PENDING_REQUESTS: ConnectionRequest[] = [
   },
 ];
 
-export const SEED_PATIENTS: NutritionistProfile[] = [
+export const SEED_INVITE_TOKENS: InviteToken[] = [
   {
-    id: "pat1", userId: "u7", crnNumber: "", bio: "", specialties: [],
-    isVerified: false, latitude: -23.55, longitude: -46.63,
-    serviceRadiusKm: 0, ratingAvg: 0, ratingCount: 0,
-    user: { id: "u7", name: "Marcos Oliveira" }, distanceKm: 0,
+    id: "tok1",
+    code: "ANA-MK8P",
+    nutritionistId: "np1",
+    label: "Plano Premium – Marcos Oliveira",
+    serviceType: "premium",
+    priceRcents: 34900,
+    notes: "Consultas quinzenais + acompanhamento de treino",
+    status: "used",
+    createdAt: "2026-04-10T10:00:00Z",
+    usedAt: "2026-04-12T14:30:00Z",
+    usedByUserId: "u7",
+    usedByName: "Marcos Oliveira",
   },
   {
-    id: "pat2", userId: "u8", crnNumber: "", bio: "", specialties: [],
-    isVerified: false, latitude: -23.56, longitude: -46.64,
-    serviceRadiusKm: 0, ratingAvg: 0, ratingCount: 0,
-    user: { id: "u8", name: "Fernanda Rocha" }, distanceKm: 0,
+    id: "tok2",
+    code: "ANA-FR3Q",
+    nutritionistId: "np1",
+    label: "Plano Standard – Fernanda Rocha",
+    serviceType: "standard",
+    priceRcents: 19900,
+    status: "used",
+    createdAt: "2026-04-15T09:00:00Z",
+    usedAt: "2026-04-17T11:00:00Z",
+    usedByUserId: "u8",
+    usedByName: "Fernanda Rocha",
   },
   {
-    id: "pat3", userId: "u9", crnNumber: "", bio: "", specialties: [],
-    isVerified: false, latitude: -23.57, longitude: -46.65,
-    serviceRadiusKm: 0, ratingAvg: 0, ratingCount: 0,
-    user: { id: "u9", name: "Lucas Ferreira" }, distanceKm: 0,
+    id: "tok3",
+    code: "ANA-LF7R",
+    nutritionistId: "np1",
+    label: "Plano Basic – Lucas Ferreira",
+    serviceType: "basic",
+    priceRcents: 9900,
+    status: "used",
+    createdAt: "2026-04-20T08:00:00Z",
+    usedAt: "2026-04-22T16:00:00Z",
+    usedByUserId: "u9",
+    usedByName: "Lucas Ferreira",
+  },
+  {
+    id: "tok4",
+    code: "ANA-NV2X",
+    nutritionistId: "np1",
+    label: "Plano Premium – novo paciente",
+    serviceType: "premium",
+    priceRcents: 34900,
+    notes: "Indicação do Dr. Carlos",
+    status: "active",
+    createdAt: "2026-05-10T10:00:00Z",
+    expiresAt: "2026-06-10T23:59:59Z",
+  },
+  {
+    id: "tok5",
+    code: "ANA-EX9Z",
+    nutritionistId: "np1",
+    label: "Consulta avulsa",
+    serviceType: "basic",
+    priceRcents: 5000,
+    status: "expired",
+    createdAt: "2026-03-01T10:00:00Z",
+    expiresAt: "2026-04-01T23:59:59Z",
   },
 ];
+
+export const SEED_PATIENT_CONNECTIONS: ConnectionRequest[] = [
+  {
+    id: "pc1",
+    userId: "u7",
+    nutritionistId: "np1",
+    status: "accepted",
+    connectedVia: "code",
+    inviteTokenId: "tok1",
+    serviceType: "premium",
+    priceRcents: 34900,
+    requestedAt: "2026-04-12T14:30:00Z",
+    respondedAt: "2026-04-12T14:30:00Z",
+  },
+  {
+    id: "pc2",
+    userId: "u8",
+    nutritionistId: "np1",
+    status: "accepted",
+    connectedVia: "code",
+    inviteTokenId: "tok2",
+    serviceType: "standard",
+    priceRcents: 19900,
+    requestedAt: "2026-04-17T11:00:00Z",
+    respondedAt: "2026-04-17T11:00:00Z",
+  },
+  {
+    id: "pc3",
+    userId: "u9",
+    nutritionistId: "np1",
+    status: "accepted",
+    connectedVia: "code",
+    inviteTokenId: "tok3",
+    serviceType: "basic",
+    priceRcents: 9900,
+    requestedAt: "2026-04-22T16:00:00Z",
+    respondedAt: "2026-04-22T16:00:00Z",
+  },
+];
+
+export const SEED_PATIENT_SUMMARIES: PatientSummary[] = [
+  { id: "pat1", userId: "u7", name: "Marcos Oliveira", serviceType: "premium", priceRcents: 34900, connectedAt: "2026-04-12T14:30:00Z", connectedVia: "code", latestWeightKg: 82 },
+  { id: "pat2", userId: "u8", name: "Fernanda Rocha", serviceType: "standard", priceRcents: 19900, connectedAt: "2026-04-17T11:00:00Z", connectedVia: "code", latestWeightKg: 65 },
+  { id: "pat3", userId: "u9", name: "Lucas Ferreira", serviceType: "basic", priceRcents: 9900, connectedAt: "2026-04-22T16:00:00Z", connectedVia: "code", latestWeightKg: 75 },
+];
+
+export const SEED_PATIENT_METRICS: Record<string, Metric[]> = {
+  u7: [
+    { id: "pm1", userId: "u7", measuredAt: "2026-04-12T08:00:00Z", weightKg: 85, heightCm: 178, bodyFatPct: 26, muscleMassKg: 58, waistCm: 95, bmi: 26.8, goal: "lose_weight" },
+    { id: "pm2", userId: "u7", measuredAt: "2026-04-26T08:00:00Z", weightKg: 83.5, heightCm: 178, bodyFatPct: 25.1, muscleMassKg: 58.5, waistCm: 93, bmi: 26.4, goal: "lose_weight" },
+    { id: "pm3", userId: "u7", measuredAt: "2026-05-10T08:00:00Z", weightKg: 82, heightCm: 178, bodyFatPct: 24.2, muscleMassKg: 59, waistCm: 91, bmi: 25.9, goal: "lose_weight" },
+  ],
+  u8: [
+    { id: "pm4", userId: "u8", measuredAt: "2026-04-17T08:00:00Z", weightKg: 67, heightCm: 163, bodyFatPct: 28, muscleMassKg: 44, waistCm: 75, bmi: 25.2, goal: "maintain" },
+    { id: "pm5", userId: "u8", measuredAt: "2026-05-01T08:00:00Z", weightKg: 65.5, heightCm: 163, bodyFatPct: 27, muscleMassKg: 44.5, waistCm: 73, bmi: 24.6, goal: "maintain" },
+  ],
+  u9: [
+    { id: "pm6", userId: "u9", measuredAt: "2026-04-22T08:00:00Z", weightKg: 72, heightCm: 170, bodyFatPct: 18, muscleMassKg: 56, waistCm: 80, bmi: 24.9, goal: "gain_muscle" },
+    { id: "pm7", userId: "u9", measuredAt: "2026-05-06T08:00:00Z", weightKg: 73.5, heightCm: 170, bodyFatPct: 17.5, muscleMassKg: 57.5, waistCm: 79, bmi: 25.4, goal: "gain_muscle" },
+  ],
+};
+
+export const SEED_PATIENTS: PatientSummary[] = SEED_PATIENT_SUMMARIES;
 
 export const SEED_RECIPES: Recipe[] = [
   {

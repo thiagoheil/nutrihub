@@ -67,4 +67,33 @@ export const dietService = {
     await delay();
     return mockStore.getTodayLogs();
   },
+
+  getLogsForDate: async (date: string): Promise<MealLog[]> => {
+    await delay(200);
+    return mockStore.getLogsForDate(date);
+  },
+
+  logMealForDate: async (date: string, payload: { mealId: string; status: MealLog["status"]; notes?: string }): Promise<MealLog> => {
+    await delay();
+    const log: MealLog = {
+      id: `log_${Date.now()}`,
+      mealId: payload.mealId,
+      loggedAt: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString(),
+      status: payload.status,
+      adherencePct: payload.status === "eaten" ? 100 : payload.status === "partial" ? 70 : 0,
+      notes: payload.notes,
+    };
+    mockStore.addLogForDate(date, log);
+    return log;
+  },
+
+  removeLogForDate: async (date: string, logId: string): Promise<void> => {
+    await delay(200);
+    mockStore.removeLogForDate(date, logId);
+  },
+
+  getDiaryDates: async (): Promise<{ date: string; count: number }[]> => {
+    await delay(200);
+    return mockStore.getDiaryDates();
+  },
 };

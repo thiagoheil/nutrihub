@@ -3,10 +3,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/auth.store";
 import { useLogout } from "@/hooks/use-auth";
+import { useRouter } from "expo-router";
 
 export default function ProfileScreen() {
   const user = useAuthStore((s) => s.user);
   const logout = useLogout();
+  const router = useRouter();
 
   const handleLogout = () => {
     Alert.alert("Sair", "Tem certeza que deseja sair?", [
@@ -16,11 +18,11 @@ export default function ProfileScreen() {
   };
 
   const menuItems = [
-    { icon: "person-outline", label: "Editar perfil", onPress: () => {} },
-    { icon: "card-outline", label: "Assinatura", onPress: () => {} },
-    { icon: "notifications-outline", label: "Notificações", onPress: () => {} },
-    { icon: "shield-outline", label: "Privacidade", onPress: () => {} },
-    { icon: "help-circle-outline", label: "Ajuda", onPress: () => {} },
+    { icon: "person-outline", label: "Editar perfil", onPress: () => router.push("/(app)/profile/edit") },
+    { icon: "card-outline", label: "Assinatura", onPress: () => router.push("/(app)/profile/subscription") },
+    { icon: "notifications-outline", label: "Notificações", onPress: () => router.push("/(app)/profile/notifications") },
+    { icon: "shield-outline", label: "Privacidade", onPress: () => router.push("/(app)/profile/privacy") },
+    { icon: "help-circle-outline", label: "Ajuda", onPress: () => router.push("/(app)/profile/help") },
   ];
 
   return (

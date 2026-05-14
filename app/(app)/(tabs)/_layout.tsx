@@ -27,6 +27,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="diary"
+        options={{
+          title: "Diário",
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="diet"
         options={{
           title: "Dieta",
