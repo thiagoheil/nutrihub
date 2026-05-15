@@ -88,7 +88,15 @@ export default function PatientDetailScreen() {
           style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}>
           <Ionicons name="chevron-back" size={20} color="#374151" />
         </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontFamily: "Inter-SemiBold", color: "#111827" }}>Paciente</Text>
+        <Text style={{ fontSize: 18, fontFamily: "Inter-SemiBold", color: "#111827", flex: 1 }}>Paciente</Text>
+        <TouchableOpacity
+          onPress={() => router.push(`/(app)/patient-diary/${id}`)}
+          activeOpacity={0.8}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "#F0FDF4", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: "#BBF7D0" }}
+        >
+          <Ionicons name="calendar-outline" size={16} color="#16A34A" />
+          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 13, color: "#16A34A" }}>Diário</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingTop: 4, paddingBottom: 40 }}>

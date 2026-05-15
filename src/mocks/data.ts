@@ -1,4 +1,4 @@
-import type { User, DietPlan, Metric, NutritionistProfile, ConnectionRequest, MealLog, Recipe, InviteToken, PatientSummary } from "@/types";
+import type { User, DietPlan, Metric, NutritionistProfile, ConnectionRequest, MealLog, Recipe, InviteToken, PatientSummary, NutritionistComment } from "@/types";
 
 export type MockUser = User & { password: string };
 
@@ -148,8 +148,77 @@ export const SEED_METRICS: Metric[] = [
 ];
 
 export const SEED_TODAY_LOGS: MealLog[] = [
-  { id: "log1", mealId: "m1", loggedAt: new Date().toISOString(), status: "eaten", adherencePct: 100 },
-  { id: "log2", mealId: "m2", loggedAt: new Date().toISOString(), status: "partial", adherencePct: 75, notes: "Não comi o feijão" },
+  { id: "log1", mealId: "m1", loggedAt: new Date().toISOString(), status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" },
+  { id: "log2", mealId: "m2", loggedAt: new Date().toISOString(), status: "partial", adherencePct: 75, notes: "Não comi o feijão", photoUri: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80" },
+];
+
+// Diary logs with photos for patient u7 (Marcos) - used by nutritionist diary view
+export const SEED_PATIENT_DIARY_LOGS: Record<string, Record<string, MealLog[]>> = {
+  u7: {
+    "2026-05-10": [
+      { id: "pdl1", mealId: "m1", loggedAt: "2026-05-10T07:30:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80" },
+      { id: "pdl2", mealId: "m2", loggedAt: "2026-05-10T12:20:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80" },
+      { id: "pdl3", mealId: "m3", loggedAt: "2026-05-10T15:40:00Z", status: "partial", adherencePct: 60, notes: "Não tinha iogurte, substitui por fruta" },
+      { id: "pdl4", mealId: "m4", loggedAt: "2026-05-10T19:50:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=80" },
+    ],
+    "2026-05-11": [
+      { id: "pdl5", mealId: "m1", loggedAt: "2026-05-11T07:15:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=400&q=80" },
+      { id: "pdl6", mealId: "m2", loggedAt: "2026-05-11T12:45:00Z", status: "skipped", adherencePct: 0, notes: "Reunião no almoço, não consegui comer" },
+      { id: "pdl7", mealId: "m3", loggedAt: "2026-05-11T16:00:00Z", status: "eaten", adherencePct: 100 },
+      { id: "pdl8", mealId: "m4", loggedAt: "2026-05-11T20:00:00Z", status: "eaten", adherencePct: 90, photoUri: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80" },
+    ],
+    "2026-05-12": [
+      { id: "pdl9",  mealId: "m1", loggedAt: "2026-05-12T07:00:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400&q=80" },
+      { id: "pdl10", mealId: "m2", loggedAt: "2026-05-12T12:30:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80" },
+      { id: "pdl11", mealId: "m3", loggedAt: "2026-05-12T15:50:00Z", status: "partial", adherencePct: 75, notes: "Sem morango hoje" },
+    ],
+  },
+  u8: {
+    "2026-05-11": [
+      { id: "pdl12", mealId: "m1", loggedAt: "2026-05-11T08:00:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=400&q=80" },
+      { id: "pdl13", mealId: "m2", loggedAt: "2026-05-11T12:30:00Z", status: "eaten", adherencePct: 100 },
+    ],
+    "2026-05-12": [
+      { id: "pdl14", mealId: "m1", loggedAt: "2026-05-12T07:45:00Z", status: "eaten", adherencePct: 100 },
+      { id: "pdl15", mealId: "m3", loggedAt: "2026-05-12T16:00:00Z", status: "eaten", adherencePct: 100, photoUri: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&q=80" },
+    ],
+  },
+};
+
+export const SEED_NUTRITIONIST_COMMENTS: NutritionistComment[] = [
+  {
+    id: "nc1",
+    nutritionistId: "np1",
+    patientId: "u7",
+    entityType: "meal_log",
+    entityId: "pdl2",
+    content: "Ótima escolha de almoço! Continue com essa aderência.",
+    isPinned: false,
+    createdAt: "2026-05-10T14:00:00Z",
+    nutritionist: { user: { name: "Dra. Ana Lima" } },
+  },
+  {
+    id: "nc2",
+    nutritionistId: "np1",
+    patientId: "u7",
+    entityType: "meal_log",
+    entityId: "pdl3",
+    content: "Tudo bem substituir a fruta, mas tente manter o iogurte grego para garantir a proteína do lanche.",
+    isPinned: true,
+    createdAt: "2026-05-10T14:05:00Z",
+    nutritionist: { user: { name: "Dra. Ana Lima" } },
+  },
+  {
+    id: "nc3",
+    nutritionistId: "np1",
+    patientId: "u7",
+    entityType: "meal_log",
+    entityId: "pdl6",
+    content: "Entendo que acontece, mas tente sempre ter uma opção saudável reserva para situações como essa. Uma castanha ou fruta já ajuda!",
+    isPinned: false,
+    createdAt: "2026-05-11T18:00:00Z",
+    nutritionist: { user: { name: "Dra. Ana Lima" } },
+  },
 ];
 
 export const SEED_NUTRITIONIST_PROFILES: NutritionistProfile[] = [
@@ -374,4 +443,37 @@ export const SEED_RECIPES: Recipe[] = [
     visibility: "patients_only",
     createdAt: "2024-03-15T10:00:00Z",
   },
+];
+
+// Diet plans assigned by nutritionist np1 to each patient (keyed by userId)
+export const SEED_PATIENT_PLANS: DietPlan[] = [
+  {
+    id: "dp_u7",
+    userId: "u7",
+    nutritionistId: "np1",
+    source: "nutritionist",
+    title: "Plano Hipertrofia Controlada",
+    goal: "Ganho de 3kg de massa muscular em 3 meses com superávit calórico moderado",
+    startDate: "2026-04-12",
+    endDate: "2026-07-12",
+    status: "active",
+    createdAt: "2026-04-12T10:00:00Z",
+    notes: "Manter proteína acima de 140g/dia. Priorizar treino de força 4x semana.",
+    meals: SEED_DIET_PLAN.meals,
+  },
+  {
+    id: "dp_u8",
+    userId: "u8",
+    nutritionistId: "np1",
+    source: "nutritionist",
+    title: "Plano Manutenção e Bem-estar",
+    goal: "Manter peso atual melhorando qualidade alimentar e equilíbrio nutricional",
+    startDate: "2026-04-17",
+    endDate: "2026-07-17",
+    status: "active",
+    createdAt: "2026-04-17T10:00:00Z",
+    notes: "Reduzir sódio. Aumentar ingestão de vegetais nas refeições principais.",
+    meals: SEED_DIET_PLAN.meals,
+  },
+  // u9 (Lucas) – sem plano atribuído ainda
 ];

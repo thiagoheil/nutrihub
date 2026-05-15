@@ -1,4 +1,4 @@
-import type { NutritionistProfile, ConnectionRequest, InviteToken, ServiceType, Recipe, PatientSummary, Metric } from "@/types";
+import type { NutritionistProfile, ConnectionRequest, InviteToken, ServiceType, Recipe, PatientSummary, Metric, MealLog, NutritionistComment } from "@/types";
 import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
 import { mockStore } from "@/mocks/store";
 import { storage } from "@/lib/storage";
@@ -192,6 +192,64 @@ export const nutritionistService = {
   deleteRecipe: async (recipeId: string) => {
     await delay();
     mockStore.deleteRecipe(recipeId);
+    return {};
+  },
+
+  // ─── Patient plans ────────────────────────────────────────────────────────────
+  getPatientPlan: async (userId: string) => {
+    await delay(300);
+    return mockStore.getPatientPlan(userId);
+  },
+
+  getAllPatientPlans: async (): Promise<import("@/types").DietPlan[]> => {
+    await delay();
+    return mockStore.getAllPatientPlans(currentNutritionistId());
+  },
+
+  // ─── Patient diary ────────────────────────────────────────────────────────────
+  getPatientLogsForDate: async (userId: string, date: string): Promise<MealLog[]> => {
+    await delay(250);
+    return mockStore.getPatientLogsForDate(userId, date);
+  },
+
+  getPatientDiaryDates: async (userId: string): Promise<string[]> => {
+    await delay(200);
+    return mockStore.getPatientDiaryDates(userId);
+  },
+
+  // ─── Comments ─────────────────────────────────────────────────────────────────
+  getCommentsForLog: async (logId: string): Promise<NutritionistComment[]> => {
+    await delay(200);
+    return mockStore.getCommentsForLog(logId);
+  },
+
+  addComment: async (params: {
+    patientId: string;
+    logId: string;
+    content: string;
+    isPinned?: boolean;
+  }): Promise<NutritionistComment> => {
+    await delay();
+    const nutId = currentNutritionistId();
+    const nut = SEED_NUTRITIONIST_PROFILES.find((n) => n.id === nutId);
+    const comment: NutritionistComment = {
+      id: `nc_${Date.now()}`,
+      nutritionistId: nutId,
+      patientId: params.patientId,
+      entityType: "meal_log",
+      entityId: params.logId,
+      content: params.content,
+      isPinned: params.isPinned ?? false,
+      createdAt: new Date().toISOString(),
+      nutritionist: { user: { name: nut?.user.name ?? "Nutricionista" } },
+    };
+    mockStore.addComment(comment);
+    return comment;
+  },
+
+  deleteComment: async (commentId: string) => {
+    await delay();
+    mockStore.deleteComment(commentId);
     return {};
   },
 };

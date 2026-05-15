@@ -12,6 +12,11 @@ export const nutritionistKeys = {
   patients: () => [...nutritionistKeys.all, "patients"] as const,
   patient: (id: string) => [...nutritionistKeys.all, "patient", id] as const,
   patientMetrics: (userId: string) => [...nutritionistKeys.all, "patient-metrics", userId] as const,
+  patientPlan: (userId: string) => [...nutritionistKeys.all, "patient-plan", userId] as const,
+  allPatientPlans: () => [...nutritionistKeys.all, "all-patient-plans"] as const,
+  patientDiary: (userId: string, date: string) => [...nutritionistKeys.all, "patient-diary", userId, date] as const,
+  patientDiaryDates: (userId: string) => [...nutritionistKeys.all, "patient-diary-dates", userId] as const,
+  comments: (logId: string) => [...nutritionistKeys.all, "comments", logId] as const,
   tokens: () => [...nutritionistKeys.all, "tokens"] as const,
   recipes: () => [...nutritionistKeys.all, "recipes"] as const,
 };
@@ -173,6 +178,71 @@ export function useDeleteRecipe() {
   return useMutation({
     mutationFn: (recipeId: string) => nutritionistService.deleteRecipe(recipeId),
     onSuccess: () => qc.invalidateQueries({ queryKey: nutritionistKeys.recipes() }),
+  });
+}
+
+// ─── Patient plans ────────────────────────────────────────────────────────────
+
+export function usePatientPlan(userId: string) {
+  return useQuery({
+    queryKey: nutritionistKeys.patientPlan(userId),
+    queryFn: () => nutritionistService.getPatientPlan(userId),
+    enabled: !!userId,
+  });
+}
+
+export function useAllPatientPlans() {
+  return useQuery({
+    queryKey: nutritionistKeys.allPatientPlans(),
+    queryFn: nutritionistService.getAllPatientPlans,
+  });
+}
+
+// ─── Patient diary + comments ──────────────────────────────────────────────────
+
+export function usePatientDiary(userId: string, date: string) {
+  return useQuery({
+    queryKey: nutritionistKeys.patientDiary(userId, date),
+    queryFn: () => nutritionistService.getPatientLogsForDate(userId, date),
+    enabled: !!userId && !!date,
+  });
+}
+
+export function usePatientDiaryDates(userId: string) {
+  return useQuery({
+    queryKey: nutritionistKeys.patientDiaryDates(userId),
+    queryFn: () => nutritionistService.getPatientDiaryDates(userId),
+    enabled: !!userId,
+  });
+}
+
+export function useCommentsForLog(logId: string) {
+  return useQuery({
+    queryKey: nutritionistKeys.comments(logId),
+    queryFn: () => nutritionistService.getCommentsForLog(logId),
+    enabled: !!logId,
+  });
+}
+
+export function useAddComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: { patientId: string; logId: string; content: string; isPinned?: boolean }) =>
+      nutritionistService.addComment(params),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: nutritionistKeys.comments(vars.logId) });
+    },
+  });
+}
+
+export function useDeleteComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, logId }: { commentId: string; logId: string }) =>
+      nutritionistService.deleteComment(commentId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: nutritionistKeys.comments(vars.logId) });
+    },
   });
 }
 

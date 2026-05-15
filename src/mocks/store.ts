@@ -1,4 +1,4 @@
-import type { Metric, MealLog, ConnectionRequest, DietPlan, InviteToken, Recipe, PatientSummary } from "@/types";
+import type { Metric, MealLog, ConnectionRequest, DietPlan, InviteToken, Recipe, PatientSummary, NutritionistComment } from "@/types";
 import {
   SEED_USERS,
   SEED_METRICS,
@@ -9,6 +9,9 @@ import {
   SEED_PATIENT_SUMMARIES,
   SEED_PATIENT_METRICS,
   SEED_RECIPES,
+  SEED_PATIENT_DIARY_LOGS,
+  SEED_NUTRITIONIST_COMMENTS,
+  SEED_PATIENT_PLANS,
   type MockUser,
 } from "./data";
 
@@ -23,6 +26,15 @@ let connections: ConnectionRequest[] = [...SEED_PENDING_REQUESTS, ...SEED_PATIEN
 let inviteTokens: InviteToken[] = [...SEED_INVITE_TOKENS];
 let recipes: Recipe[] = [...SEED_RECIPES];
 let patientSummaries: PatientSummary[] = [...SEED_PATIENT_SUMMARIES];
+let nutritionistComments: NutritionistComment[] = [...SEED_NUTRITIONIST_COMMENTS];
+let patientPlans: DietPlan[] = [...SEED_PATIENT_PLANS];
+// Deep copy patient diary logs: Record<userId, Map<date, MealLog[]>>
+const patientDiaryLogs: Record<string, Map<string, MealLog[]>> = Object.fromEntries(
+  Object.entries(SEED_PATIENT_DIARY_LOGS).map(([uid, dates]) => [
+    uid,
+    new Map(Object.entries(dates).map(([date, logs]) => [date, [...logs]])),
+  ])
+);
 let userIdCounter = 100;
 let activeDietPlan: DietPlan | null = null;
 let pendingFoodSelections: Record<string, string[]> | null = null;
@@ -165,7 +177,46 @@ export const mockStore = {
   addRecipe(recipe: Recipe): void { recipes = [...recipes, recipe]; },
   deleteRecipe(recipeId: string): void { recipes = recipes.filter((r) => r.id !== recipeId); },
 
-  // ─── Diet plan ────────────────────────────────────────────────────────────────
+  // ─── Patient diary (nutritionist view) ───────────────────────────────────────
+  getPatientLogsForDate(userId: string, date: string): MealLog[] {
+    return patientDiaryLogs[userId]?.get(date) ?? [];
+  },
+  getPatientDiaryDates(userId: string): string[] {
+    return Array.from(patientDiaryLogs[userId]?.keys() ?? []).sort();
+  },
+
+  // ─── Nutritionist comments ────────────────────────────────────────────────────
+  getCommentsForLog(logId: string): NutritionistComment[] {
+    return nutritionistComments.filter((c) => c.entityId === logId);
+  },
+  getCommentsForPatientDate(patientId: string, date: string): NutritionistComment[] {
+    const logs = Object.values(patientDiaryLogs[patientId] ? Object.fromEntries(patientDiaryLogs[patientId]) : {})
+      .flat()
+      .filter((l) => l.loggedAt.startsWith(date))
+      .map((l) => l.id);
+    return nutritionistComments.filter((c) => c.patientId === patientId && logs.includes(c.entityId));
+  },
+  addComment(comment: NutritionistComment): void {
+    nutritionistComments = [...nutritionistComments, comment];
+  },
+  deleteComment(commentId: string): void {
+    nutritionistComments = nutritionistComments.filter((c) => c.id !== commentId);
+  },
+
+  // ─── Patient plans (nutritionist-assigned) ────────────────────────────────────
+  getPatientPlan(userId: string): DietPlan | null {
+    return patientPlans.find((p) => p.userId === userId) ?? null;
+  },
+  getAllPatientPlans(nutritionistId: string): DietPlan[] {
+    return patientPlans.filter((p) => p.nutritionistId === nutritionistId);
+  },
+  upsertPatientPlan(plan: DietPlan): void {
+    const idx = patientPlans.findIndex((p) => p.userId === plan.userId);
+    if (idx >= 0) patientPlans = patientPlans.map((p, i) => (i === idx ? plan : p));
+    else patientPlans = [...patientPlans, plan];
+  },
+
+  // ─── Diet plan (self) ─────────────────────────────────────────────────────────
   getActivePlan(): DietPlan | null { return activeDietPlan; },
   setActivePlan(plan: DietPlan): void { activeDietPlan = plan; },
 

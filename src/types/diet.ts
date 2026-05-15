@@ -64,4 +64,5 @@ export interface MealLog {
   status: MealLogStatus;
   adherencePct: number;
   notes?: string;
+  photoUri?: string;
 }

@@ -11,6 +11,8 @@ export default function AppLayout() {
       <Stack.Screen name="(nutritionist)" />
       <Stack.Screen name="nutritionist/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
       <Stack.Screen name="patient/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
+      <Stack.Screen name="patient-diary/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
+      <Stack.Screen name="patient-plan/[id]" options={{ presentation: "card", animation: "slide_from_right" }} />
       <Stack.Screen name="profile/edit" options={{ presentation: "card", animation: "slide_from_right" }} />
       <Stack.Screen name="profile/subscription" options={{ presentation: "card", animation: "slide_from_right" }} />
       <Stack.Screen name="profile/notifications" options={{ presentation: "card", animation: "slide_from_right" }} />

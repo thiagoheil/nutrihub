@@ -38,6 +38,13 @@ export default function NutritionistLayout() {
         }}
       />
       <Tabs.Screen
+        name="plans"
+        options={{
+          title: "Planos",
+          tabBarIcon: ({ color, size }) => <Ionicons name="clipboard-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="convites"
         options={{
           title: "Convites",
