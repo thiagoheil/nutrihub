@@ -5,18 +5,20 @@ import { useAuthStore } from "@/store/auth.store";
 import { useLogout } from "@/hooks/use-auth";
 import { useMyPatients, useMyTokens, useMyRecipes } from "@/hooks/use-nutritionist";
 import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
+import { useRouter } from "expo-router";
 
 type MenuItem = { icon: string; label: string; subtitle?: string; onPress: () => void; danger?: boolean };
 
 export default function NutritionistProfileScreen() {
-  const user = useAuthStore((s) => s.user);
+  const router = useRouter();
+  const user   = useAuthStore((s) => s.user);
   const logout = useLogout();
   const { data: patients } = useMyPatients();
-  const { data: tokens } = useMyTokens();
-  const { data: recipes } = useMyRecipes();
+  const { data: tokens }   = useMyTokens();
+  const { data: recipes }  = useMyRecipes();
 
   const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === user?.id)
-    ?? SEED_NUTRITIONIST_PROFILES[0]; // fallback to np1 in mock
+    ?? SEED_NUTRITIONIST_PROFILES[0];
 
   const handleLogout = () => {
     Alert.alert("Sair", "Tem certeza que deseja sair?", [
@@ -31,24 +33,24 @@ export default function NutritionistProfileScreen() {
     {
       title: "Conta",
       items: [
-        { icon: "person-outline",       label: "Editar perfil",     subtitle: "Nome, bio, especialidades",   onPress: stub },
-        { icon: "card-outline",          label: "Assinatura",        subtitle: "Plano profissional ativo",    onPress: stub },
-        { icon: "shield-checkmark-outline", label: "Verificação CRN", subtitle: profile.isVerified ? "Conta verificada" : "Pendente de verificação", onPress: stub },
+        { icon: "person-outline",           label: "Editar perfil",    subtitle: "Nome, bio e especialidades",           onPress: () => router.push("/(app)/nutritionist-profile/edit")         },
+        { icon: "card-outline",             label: "Assinatura",       subtitle: "Plano Starter · R$ 29,90/mês",         onPress: () => router.push("/(app)/nutritionist-profile/subscription")  },
+        { icon: "shield-checkmark-outline", label: "Verificação CRN",  subtitle: profile.isVerified ? "✓ Conta verificada" : "Pendente de verificação", onPress: () => router.push("/(app)/nutritionist-profile/crn") },
       ],
     },
     {
       title: "Preferências",
       items: [
-        { icon: "notifications-outline", label: "Notificações",      subtitle: "Alertas de solicitações",     onPress: stub },
-        { icon: "time-outline",          label: "Disponibilidade",   subtitle: "Horários de atendimento",     onPress: stub },
-        { icon: "location-outline",      label: "Área de atendimento", subtitle: `${profile.serviceRadiusKm}km de raio configurado`, onPress: stub },
+        { icon: "notifications-outline", label: "Notificações",    subtitle: "Alertas de solicitações e registros",  onPress: () => router.push("/(app)/nutritionist-profile/notifications") },
+        { icon: "time-outline",          label: "Disponibilidade", subtitle: "Horários e modalidade de atendimento", onPress: () => router.push("/(app)/nutritionist-profile/availability")   },
+        { icon: "location-outline",      label: "Área de atendimento", subtitle: `${profile.serviceRadiusKm}km de raio configurado`, onPress: () => router.push("/(app)/nutritionist-profile/service-area") },
       ],
     },
     {
       title: "Suporte",
       items: [
-        { icon: "help-circle-outline",  label: "Ajuda",             subtitle: "Dúvidas e suporte",           onPress: stub },
-        { icon: "document-text-outline", label: "Termos de uso",    subtitle: "Políticas e privacidade",     onPress: stub },
+        { icon: "help-circle-outline",   label: "Ajuda",          subtitle: "Dúvidas e suporte",       onPress: () => router.push("/(app)/nutritionist-profile/help")  },
+        { icon: "document-text-outline", label: "Termos de uso",  subtitle: "Políticas e privacidade",  onPress: () => router.push("/(app)/nutritionist-profile/terms") },
       ],
     },
   ];
