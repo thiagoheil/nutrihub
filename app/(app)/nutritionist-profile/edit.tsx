@@ -7,7 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuthStore } from "@/store/auth.store";
-import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
+import { useMyNutritionistProfile, useUpdateMyNutritionistProfile } from "@/hooks/use-nutritionist";
 
 const SPECIALTY_SUGGESTIONS = [
   "Emagrecimento", "Nutrição Esportiva", "Reeducação Alimentar",
@@ -20,17 +20,25 @@ export default function NutritionistEditScreen() {
   const router = useRouter();
   const user   = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
-
-  const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === user?.id)
-    ?? SEED_NUTRITIONIST_PROFILES[0];
+  const { data: profile } = useMyNutritionistProfile();
+  const updateProfile = useUpdateMyNutritionistProfile();
 
   const [name,        setName]        = useState(user?.name ?? "");
   const [phone,       setPhone]       = useState(user?.phone ?? "");
-  const [bio,         setBio]         = useState(profile.bio ?? "");
-  const [crnNumber,   setCrnNumber]   = useState(profile.crnNumber ?? "");
-  const [specialties, setSpecialties] = useState<string[]>(profile.specialties ?? []);
+  const [bio,         setBio]         = useState("");
+  const [crnNumber,   setCrnNumber]   = useState("");
+  const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpec,     setNewSpec]     = useState("");
   const [saving,      setSaving]      = useState(false);
+  const [hydrated,    setHydrated]    = useState(false);
+
+  // Hydrate form once the profile loads.
+  if (profile && !hydrated) {
+    setBio(profile.bio ?? "");
+    setCrnNumber(profile.crnNumber ?? "");
+    setSpecialties(profile.specialties ?? []);
+    setHydrated(true);
+  }
 
   function addSpecialty(s: string) {
     const trimmed = s.trim();
@@ -49,10 +57,21 @@ export default function NutritionistEditScreen() {
       return;
     }
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    updateUser({ name: name.trim(), phone: phone.trim() });
-    setSaving(false);
-    router.back();
+    try {
+      await updateProfile.mutateAsync({
+        name: name.trim(),
+        phone: phone.trim(),
+        bio: bio.trim(),
+        crnNumber: crnNumber.trim(),
+        specialties,
+      });
+      updateUser({ name: name.trim(), phone: phone.trim() });
+      router.back();
+    } catch (e) {
+      Alert.alert("Erro", e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

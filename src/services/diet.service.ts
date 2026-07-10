@@ -1,48 +1,72 @@
 import type { DietPlan, MealLog, Food, UserFoodPreference, FoodPreference } from "@/types";
-import { SEED_DIET_PLAN } from "@/mocks/data";
-import { mockStore } from "@/mocks/store";
+import { supabase } from "@/lib/supabase";
+import { mapDietPlan, mapMealLog, mapFood, mapPreference } from "@/lib/mappers";
+import { currentUserId } from "@/lib/session";
 
-const delay = (ms = 400) => new Promise<void>((r) => setTimeout(r, ms));
+const PLAN_SELECT = "*, meals(*, meal_items(*, food:foods(*)))";
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const adherence = (s: MealLog["status"]) => (s === "eaten" ? 100 : s === "partial" ? 70 : 0);
 
 export const dietService = {
   getActivePlan: async (): Promise<DietPlan | null> => {
-    await delay();
-    return mockStore.getActivePlan();
+    const uid = await currentUserId();
+    const { data, error } = await supabase
+      .from("diet_plans")
+      .select(PLAN_SELECT)
+      .eq("user_id", uid)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapDietPlan(data) : null;
   },
 
-  getPlanById: async (_id: string): Promise<DietPlan> => {
-    await delay();
-    return SEED_DIET_PLAN;
+  getPlanById: async (id: string): Promise<DietPlan> => {
+    const { data, error } = await supabase.from("diet_plans").select(PLAN_SELECT).eq("id", id).single();
+    if (error) throw error;
+    return mapDietPlan(data);
   },
 
   generatePlan: async (payload: {
     goalDescription: string;
     selectedFoods?: Record<string, string[]>;
   }): Promise<DietPlan> => {
-    await delay(1200);
-    if (payload.selectedFoods) {
-      mockStore.setPendingFoodSelections(payload.selectedFoods);
-    }
-    const plan = SEED_DIET_PLAN;
-    mockStore.setActivePlan(plan);
-    return plan;
+    const { data: planId, error } = await supabase.rpc("generate_diet_plan", {
+      p_goal: payload.goalDescription,
+      p_title: "Plano Personalizado",
+    });
+    if (error) throw error;
+    return dietService.getPlanById(planId as string);
   },
 
   getPreferences: async (): Promise<UserFoodPreference[]> => {
-    await delay();
-    return [];
+    const uid = await currentUserId();
+    const { data, error } = await supabase
+      .from("user_food_preferences")
+      .select("*, food:foods(*)")
+      .eq("user_id", uid);
+    if (error) throw error;
+    return (data ?? []).map(mapPreference);
   },
 
-  upsertPreference: async (_foodId: string, _preference: FoodPreference) => {
-    await delay();
+  upsertPreference: async (foodId: string, preference: FoodPreference) => {
+    const uid = await currentUserId();
+    const { error } = await supabase
+      .from("user_food_preferences")
+      .upsert({ user_id: uid, food_id: foodId, preference }, { onConflict: "user_id,food_id" });
+    if (error) throw error;
     return {};
   },
 
   searchFoods: async (query: string): Promise<Food[]> => {
-    await delay(300);
-    const allFoods = SEED_DIET_PLAN.meals.flatMap((m) => m.items.map((i) => i.food));
-    const q = query.toLowerCase();
-    return allFoods.filter((f) => f.name.toLowerCase().includes(q));
+    const { data, error } = await supabase
+      .from("foods")
+      .select("*")
+      .ilike("name", `%${query}%`)
+      .limit(30);
+    if (error) throw error;
+    return (data ?? []).map(mapFood);
   },
 
   logMeal: async (payload: {
@@ -50,50 +74,82 @@ export const dietService = {
     status: MealLog["status"];
     notes?: string;
   }): Promise<MealLog> => {
-    await delay();
-    const log: MealLog = {
-      id: `log_${Date.now()}`,
-      mealId: payload.mealId,
-      loggedAt: new Date().toISOString(),
-      status: payload.status,
-      adherencePct: payload.status === "eaten" ? 100 : payload.status === "partial" ? 70 : 0,
-      notes: payload.notes,
-    };
-    mockStore.addLog(log);
-    return log;
+    const uid = await currentUserId();
+    const { data, error } = await supabase
+      .from("meal_logs")
+      .insert({
+        user_id: uid,
+        meal_id: payload.mealId,
+        status: payload.status,
+        adherence_pct: adherence(payload.status),
+        notes: payload.notes ?? null,
+        logged_at: new Date().toISOString(),
+        log_date: todayStr(),
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return mapMealLog(data);
   },
 
   getTodayLogs: async (): Promise<MealLog[]> => {
-    await delay();
-    return mockStore.getTodayLogs();
+    const uid = await currentUserId();
+    const { data, error } = await supabase
+      .from("meal_logs")
+      .select("*")
+      .eq("user_id", uid)
+      .eq("log_date", todayStr())
+      .order("logged_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(mapMealLog);
   },
 
   getLogsForDate: async (date: string): Promise<MealLog[]> => {
-    await delay(200);
-    return mockStore.getLogsForDate(date);
+    const uid = await currentUserId();
+    const { data, error } = await supabase
+      .from("meal_logs")
+      .select("*")
+      .eq("user_id", uid)
+      .eq("log_date", date)
+      .order("logged_at", { ascending: true });
+    if (error) throw error;
+    return (data ?? []).map(mapMealLog);
   },
 
-  logMealForDate: async (date: string, payload: { mealId: string; status: MealLog["status"]; notes?: string }): Promise<MealLog> => {
-    await delay();
-    const log: MealLog = {
-      id: `log_${Date.now()}`,
-      mealId: payload.mealId,
-      loggedAt: new Date(`${date}T${new Date().toTimeString().slice(0, 8)}`).toISOString(),
-      status: payload.status,
-      adherencePct: payload.status === "eaten" ? 100 : payload.status === "partial" ? 70 : 0,
-      notes: payload.notes,
-    };
-    mockStore.addLogForDate(date, log);
-    return log;
+  logMealForDate: async (
+    date: string,
+    payload: { mealId: string; status: MealLog["status"]; notes?: string }
+  ): Promise<MealLog> => {
+    const uid = await currentUserId();
+    const time = new Date().toTimeString().slice(0, 8);
+    const { data, error } = await supabase
+      .from("meal_logs")
+      .insert({
+        user_id: uid,
+        meal_id: payload.mealId,
+        status: payload.status,
+        adherence_pct: adherence(payload.status),
+        notes: payload.notes ?? null,
+        logged_at: new Date(`${date}T${time}`).toISOString(),
+        log_date: date,
+      })
+      .select("*")
+      .single();
+    if (error) throw error;
+    return mapMealLog(data);
   },
 
-  removeLogForDate: async (date: string, logId: string): Promise<void> => {
-    await delay(200);
-    mockStore.removeLogForDate(date, logId);
+  removeLogForDate: async (_date: string, logId: string): Promise<void> => {
+    const { error } = await supabase.from("meal_logs").delete().eq("id", logId);
+    if (error) throw error;
   },
 
   getDiaryDates: async (): Promise<{ date: string; count: number }[]> => {
-    await delay(200);
-    return mockStore.getDiaryDates();
+    const { data, error } = await supabase.rpc("get_diary_dates");
+    if (error) throw error;
+    return (data ?? []).map((r: { date: string; count: number }) => ({
+      date: r.date,
+      count: r.count,
+    }));
   },
 };

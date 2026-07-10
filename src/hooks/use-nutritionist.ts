@@ -21,6 +21,28 @@ export const nutritionistKeys = {
   recipes: () => [...nutritionistKeys.all, "recipes"] as const,
 };
 
+export function useMyNutritionistProfile() {
+  return useQuery({
+    queryKey: [...nutritionistKeys.all, "my-profile"],
+    queryFn: nutritionistService.getMyProfile,
+  });
+}
+
+export function useUpdateMyNutritionistProfile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: {
+      name?: string;
+      phone?: string;
+      bio?: string;
+      crnNumber?: string;
+      specialties?: string[];
+      serviceRadiusKm?: number;
+    }) => nutritionistService.updateMyProfile(params),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...nutritionistKeys.all, "my-profile"] }),
+  });
+}
+
 export function useNearbyNutritionists(coords: { latitude: number; longitude: number } | null) {
   return useQuery({
     queryKey: coords ? nutritionistKeys.nearby(coords.latitude, coords.longitude) : [],

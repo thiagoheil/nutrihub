@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert, TextInput } from "reac
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
-import { useAuthStore } from "@/store/auth.store";
+import { useMyNutritionistProfile } from "@/hooks/use-nutritionist";
 
 const STEPS = [
   { icon: "document-text-outline",  label: "Informe o CRN",         desc: "Digite seu número de registro no Conselho Regional de Nutrição" },
@@ -22,14 +21,18 @@ const FAQ = [
 
 export default function CrnVerificationScreen() {
   const router = useRouter();
-  const user   = useAuthStore((s) => s.user);
-  const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === user?.id)
-    ?? SEED_NUTRITIONIST_PROFILES[0];
+  const { data: profile } = useMyNutritionistProfile();
 
-  const isVerified = profile.isVerified;
-  const [crnInput, setCrnInput] = useState(profile.crnNumber);
+  const isVerified = profile?.isVerified ?? false;
+  const [crnInput, setCrnInput] = useState("");
   const [openFaq, setOpenFaq]   = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [hydrated, setHydrated]   = useState(false);
+
+  if (profile && !hydrated) {
+    setCrnInput(profile.crnNumber ?? "");
+    setHydrated(true);
+  }
 
   function handleSubmit() {
     if (!crnInput.trim()) {
@@ -99,7 +102,7 @@ export default function CrnVerificationScreen() {
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, color: "#15803D" }}>Conta verificada</Text>
               <Text style={{ fontFamily: "Inter-Regular", fontSize: 13, color: "#6B7280", marginTop: 2 }}>
-                {profile.crnNumber} · Renovação em Jan/2027
+                {profile?.crnNumber} · Renovação em Jan/2027
               </Text>
             </View>
           </View>

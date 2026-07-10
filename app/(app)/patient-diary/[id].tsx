@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   View, Text, ScrollView, TouchableOpacity, ActivityIndicator,
   Image, TextInput, Alert, KeyboardAvoidingView, Platform,
@@ -8,21 +8,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   usePatientDetail, usePatientDiary, usePatientDiaryDates,
-  useCommentsForLog, useAddComment, useDeleteComment,
+  useCommentsForLog, useAddComment, useDeleteComment, usePatientPlan,
 } from "@/hooks/use-nutritionist";
-import { SEED_DIET_PLAN } from "@/mocks/data";
 import type { MealLog, NutritionistComment } from "@/types";
+
+type MealInfo = { name: string; scheduledTime: string };
 import {
   format, parseISO, isToday, isFuture, startOfMonth, endOfMonth,
   eachDayOfInterval, getDay, addMonths, subMonths, isSameMonth,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-
-// ─── Meal name lookup ─────────────────────────────────────────────────────────
-
-const mealById: Record<string, { name: string; scheduledTime: string }> = Object.fromEntries(
-  SEED_DIET_PLAN.meals.map((m) => [m.id, { name: m.name, scheduledTime: m.scheduledTime }])
-);
 
 const STATUS = {
   eaten:   { label: "Realizada",  color: "#16A34A", bg: "#DCFCE7", icon: "checkmark-circle" },
@@ -246,8 +241,8 @@ function CommentInput({ patientId, logId }: { patientId: string; logId: string }
 
 // ─── Log card ─────────────────────────────────────────────────────────────────
 
-function LogCard({ log, patientId }: { log: MealLog; patientId: string }) {
-  const meal = mealById[log.mealId];
+function LogCard({ log, patientId, mealMap }: { log: MealLog; patientId: string; mealMap: Record<string, MealInfo> }) {
+  const meal = mealMap[log.mealId];
   const st   = STATUS[log.status] ?? STATUS.eaten;
   const [showComments, setShowComments] = useState(true);
   const { data: comments = [], isLoading } = useCommentsForLog(log.id);
@@ -354,6 +349,12 @@ export default function PatientDiaryScreen() {
   const { data: patient, isLoading: patientLoading } = usePatientDetail(id);
   const { data: diaryDates = [] }                    = usePatientDiaryDates(patient?.userId ?? "");
   const { data: logs = [], isLoading: logsLoading }  = usePatientDiary(patient?.userId ?? "", selectedDate);
+  const { data: plan }                               = usePatientPlan(patient?.userId ?? "");
+
+  const mealMap = useMemo<Record<string, MealInfo>>(
+    () => Object.fromEntries((plan?.meals ?? []).map((m) => [m.id, { name: m.name, scheduledTime: m.scheduledTime }])),
+    [plan]
+  );
 
   if (patientLoading) {
     return (
@@ -453,7 +454,7 @@ export default function PatientDiaryScreen() {
               </View>
             ) : (
               logs.map((log) => (
-                <LogCard key={log.id} log={log} patientId={patient?.userId ?? ""} />
+                <LogCard key={log.id} log={log} patientId={patient?.userId ?? ""} mealMap={mealMap} />
               ))
             )}
           </View>

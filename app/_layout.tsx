@@ -9,13 +9,14 @@ import { useFonts } from "expo-font";
 import { queryClient } from "@/lib/query-client";
 import { useAuthStore } from "@/store/auth.store";
 import { authService } from "@/services/auth.service";
-import { storage } from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const setLoading = useAuthStore((s) => s.setLoading);
+  const logout = useAuthStore((s) => s.logout);
 
   const [fontsLoaded, fontError] = useFonts({
     "Inter-Regular": require("../assets/fonts/Inter-Regular.ttf"),
@@ -24,22 +25,31 @@ export default function RootLayout() {
     "Inter-Bold": require("../assets/fonts/Inter-Bold.ttf"),
   });
 
-  // Restore session on app start
+  // Restore Supabase session on app start
   useEffect(() => {
     async function restoreSession() {
       try {
-        const tokens = storage.getTokens();
-        if (tokens) {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) {
           const user = await authService.me();
-          setAuth(user, tokens);
+          setAuth(user, {
+            accessToken: data.session.access_token,
+            refreshToken: data.session.refresh_token,
+          });
         }
       } catch {
-        storage.clearTokens();
+        // no valid session — stay logged out
       } finally {
         setLoading(false);
       }
     }
     restoreSession();
+
+    // Keep the store in sync when the session ends (e.g. refresh token expired)
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") logout();
+    });
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {

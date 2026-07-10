@@ -3,8 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, Alert, TextInput } from "reac
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
-import { useAuthStore } from "@/store/auth.store";
+import { useMyNutritionistProfile, useUpdateMyNutritionistProfile } from "@/hooks/use-nutritionist";
 
 const RADIUS_PRESETS = [5, 10, 20, 30, 50, 100];
 
@@ -38,16 +37,21 @@ function RadiusRing({ radius, maxRadius }: { radius: number; maxRadius: number }
 
 export default function ServiceAreaScreen() {
   const router  = useRouter();
-  const user    = useAuthStore((s) => s.user);
-  const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === user?.id)
-    ?? SEED_NUTRITIONIST_PROFILES[0];
+  const { data: profile } = useMyNutritionistProfile();
 
-  const [radius,    setRadius]    = useState(profile.serviceRadiusKm);
+  const [radius,    setRadius]    = useState(10);
+  const [hydrated,  setHydrated]  = useState(false);
   const [city,      setCity]      = useState("São Paulo");
   const [state,     setState]     = useState("SP");
   const [online,    setOnline]    = useState(true);
   const [inPerson,  setInPerson]  = useState(true);
   const [saving,    setSaving]    = useState(false);
+  const updateProfile = useUpdateMyNutritionistProfile();
+
+  if (profile && !hydrated) {
+    setRadius(profile.serviceRadiusKm ?? 10);
+    setHydrated(true);
+  }
 
   function increment(delta: number) {
     setRadius((r) => Math.max(1, Math.min(200, r + delta)));
@@ -55,9 +59,14 @@ export default function ServiceAreaScreen() {
 
   async function handleSave() {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setSaving(false);
-    Alert.alert("Salvo!", "Área de atendimento atualizada.", [{ text: "OK", onPress: () => router.back() }]);
+    try {
+      await updateProfile.mutateAsync({ serviceRadiusKm: radius });
+      Alert.alert("Salvo!", "Área de atendimento atualizada.", [{ text: "OK", onPress: () => router.back() }]);
+    } catch (e) {
+      Alert.alert("Erro", e instanceof Error ? e.message : "Não foi possível salvar.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (

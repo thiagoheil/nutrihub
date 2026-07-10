@@ -3,9 +3,17 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "@/store/auth.store";
 import { useLogout } from "@/hooks/use-auth";
-import { useMyPatients, useMyTokens, useMyRecipes } from "@/hooks/use-nutritionist";
-import { SEED_NUTRITIONIST_PROFILES } from "@/mocks/data";
+import { useMyPatients, useMyTokens, useMyRecipes, useMyNutritionistProfile } from "@/hooks/use-nutritionist";
 import { useRouter } from "expo-router";
+
+const EMPTY_PROFILE = {
+  isVerified: false,
+  crnNumber: "",
+  serviceRadiusKm: 10,
+  ratingAvg: 0,
+  specialties: [] as string[],
+  bio: undefined as string | undefined,
+};
 
 type MenuItem = { icon: string; label: string; subtitle?: string; onPress: () => void; danger?: boolean };
 
@@ -16,9 +24,9 @@ export default function NutritionistProfileScreen() {
   const { data: patients } = useMyPatients();
   const { data: tokens }   = useMyTokens();
   const { data: recipes }  = useMyRecipes();
+  const { data: myProfile } = useMyNutritionistProfile();
 
-  const profile = SEED_NUTRITIONIST_PROFILES.find((n) => n.userId === user?.id)
-    ?? SEED_NUTRITIONIST_PROFILES[0];
+  const profile = myProfile ?? EMPTY_PROFILE;
 
   const handleLogout = () => {
     Alert.alert("Sair", "Tem certeza que deseja sair?", [
