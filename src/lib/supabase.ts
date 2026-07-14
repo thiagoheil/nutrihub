@@ -1,6 +1,6 @@
 import "react-native-url-polyfill/auto";
 import { AppState } from "react-native";
-import { MMKV } from "react-native-mmkv";
+import * as SecureStore from "expo-secure-store";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? "";
@@ -12,17 +12,16 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   );
 }
 
-// MMKV-backed storage adapter (sync, no 2KB SecureStore limit → safe for JWT sessions).
-const mmkv = new MMKV({ id: "supabase-auth" });
-const mmkvStorage = {
-  getItem: (key: string) => mmkv.getString(key) ?? null,
-  setItem: (key: string, value: string) => mmkv.set(key, value),
-  removeItem: (key: string) => mmkv.delete(key),
+// expo-secure-store adapter — compatible with Expo Go (Keychain/Keystore).
+const secureStorage = {
+  getItem: (key: string) => SecureStore.getItemAsync(key),
+  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
 };
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    storage: mmkvStorage,
+    storage: secureStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
