@@ -41,4 +41,7 @@ yarn-error.log*
 # TypeScript
 *.tsbuildinfo
 
+# Roteiros de apresentação (notas pessoais)
+apresentacao/ROTEIRO*.md
+
 
